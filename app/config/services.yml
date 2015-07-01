@@ -1,0 +1,64 @@
+# Learn more about services, parameters and containers at
+# http://symfony.com/doc/current/book/service_container.html
+parameters:
+#    parameter_name: value
+
+services:
+  app.unit_of_work.factory:
+    class: RayRutjes\DomainFoundation\UnitOfWork\Factory\DefaultUnitOfWorkFactory
+  app.unit_of_work:
+    class: RayRutjes\DomainFoundation\UnitOfWork
+    factory: [@app.unit_of_work.factory, createUnitOfWork]
+
+  app.command.handler_registry:
+    class: RayRutjes\DomainFoundation\Command\Handler\Registry\InMemoryCommandHandlerRegistry
+    calls:
+      - [subscribe, ['AppBundle\Identity\RegisterUserCommand', @app.command.register_user_handler]]
+      - [subscribe, ['AppBundle\Identity\ChangeUsernameCommand', @app.command.change_username_handler]]
+      - [subscribe, ['AppBundle\Identity\ChangeUserPasswordCommand', @app.command.change_user_password_handler]]
+  app.command.register_user_handler:
+    class: AppBundle\Identity\RegisterUserCommandHandler
+    arguments: [@app.user.register, @app.user.repository]
+  app.command.change_username_handler:
+    class: AppBundle\Identity\ChangeUsernameCommandHandler
+    arguments: [@app.user.repository]
+  app.command.change_user_password_handler:
+    class: AppBundle\Identity\ChangeUserPasswordCommandHandler
+    arguments: [@app.user.repository, @app.password.hashing]
+  app.command.bus:
+    class: RayRutjes\DomainFoundation\Command\Bus\SimpleCommandBus
+    arguments: [@app.command.handler_registry, @app.unit_of_work]
+  app.command.factory:
+    class: RayRutjes\DomainFoundation\Command\Factory\GenericCommandFactory
+    arguments: [@app.contract.factory, @app.identifier.factory]
+  app.command.gateway:
+    class: RayRutjes\DomainFoundation\Command\Gateway\DefaultCommandGateway
+    arguments: [@app.command.bus, @app.command.factory]
+
+  app.user.register:
+    class: AppBundle\Domain\Identity\RegisterUserService
+    arguments: [@app.password.hashing]
+  app.user.repository:
+    class: AppBundle\Infrastructure\Persistence\DoctrineUserRepository
+    arguments: [@app.unit_of_work, @database_connection, @app.event.bus]
+
+  app.event.bus:
+    class: RayRutjes\DomainFoundation\EventBus\SimpleEventBus
+    calls:
+      - [subscribe, [@app.listener.user_list_projector]]
+
+  app.listener.user_list_projector:
+    class: AppBundle\Listener\UserListProjectorListener
+    arguments: [@database_connection]
+
+  app.serializer.array:
+    class: RayRutjes\DomainFoundation\Serializer\ArraySerializer
+
+  app.password.hashing:
+    class: AppBundle\Infrastructure\Identity\BcryptPasswordHashingService
+
+  app.contract.factory:
+    class: RayRutjes\DomainFoundation\Contract\ConventionalContractFactory
+
+  app.identifier.factory:
+    class: RayRutjes\DomainFoundation\Message\Identifier\Factory\UuidMessageIdentifierFactory
