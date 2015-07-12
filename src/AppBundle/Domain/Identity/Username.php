@@ -2,9 +2,7 @@
 
 namespace AppBundle\Domain\Identity;
 
-use RayRutjes\DomainFoundation\ValueObject\ValueObject;
-
-final class Username implements ValueObject
+final class Username
 {
     /**
      * @var string
@@ -27,7 +25,7 @@ final class Username implements ValueObject
      *
      * @return bool
      */
-    public function sameValueAs(ValueObject $other)
+    public function sameValueAs(Username $other)
     {
         if (!$other instanceof self) {
             return false;

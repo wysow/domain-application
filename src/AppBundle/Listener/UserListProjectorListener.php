@@ -8,7 +8,7 @@ use AppBundle\Domain\Identity\UserRegistered;
 use Doctrine\DBAL\Connection;
 use RayRutjes\DomainFoundation\Contract\ConventionalContractFactory;
 use RayRutjes\DomainFoundation\Domain\Event\Event;
-use RayRutjes\DomainFoundation\EventBus\Listener\EventListener;
+use RayRutjes\DomainFoundation\EventBus\EventListener;
 
 class UserListProjectorListener implements EventListener
 {

@@ -4,11 +4,8 @@ parameters:
 #    parameter_name: value
 
 services:
-  app.unit_of_work.factory:
-    class: RayRutjes\DomainFoundation\UnitOfWork\Factory\DefaultUnitOfWorkFactory
   app.unit_of_work:
-    class: RayRutjes\DomainFoundation\UnitOfWork
-    factory: [@app.unit_of_work.factory, createUnitOfWork]
+    class: RayRutjes\DomainFoundation\UnitOfWork\DefaultUnitOfWork
 
   app.command.handler_registry:
     class: RayRutjes\DomainFoundation\Command\Handler\Registry\InMemoryCommandHandlerRegistry
@@ -16,6 +13,7 @@ services:
       - [subscribe, ['AppBundle\Identity\RegisterUserCommand', @app.command.register_user_handler]]
       - [subscribe, ['AppBundle\Identity\ChangeUsernameCommand', @app.command.change_username_handler]]
       - [subscribe, ['AppBundle\Identity\ChangeUserPasswordCommand', @app.command.change_user_password_handler]]
+
   app.command.register_user_handler:
     class: AppBundle\Identity\RegisterUserCommandHandler
     arguments: [@app.user.register, @app.user.repository]
@@ -28,12 +26,9 @@ services:
   app.command.bus:
     class: RayRutjes\DomainFoundation\Command\Bus\SimpleCommandBus
     arguments: [@app.command.handler_registry, @app.unit_of_work]
-  app.command.factory:
-    class: RayRutjes\DomainFoundation\Command\Factory\GenericCommandFactory
-    arguments: [@app.contract.factory, @app.identifier.factory]
   app.command.gateway:
     class: RayRutjes\DomainFoundation\Command\Gateway\DefaultCommandGateway
-    arguments: [@app.command.bus, @app.command.factory]
+    arguments: [@app.command.bus]
 
   app.user.register:
     class: AppBundle\Domain\Identity\RegisterUserService
@@ -56,9 +51,3 @@ services:
 
   app.password.hashing:
     class: AppBundle\Infrastructure\Identity\BcryptPasswordHashingService
-
-  app.contract.factory:
-    class: RayRutjes\DomainFoundation\Contract\ConventionalContractFactory
-
-  app.identifier.factory:
-    class: RayRutjes\DomainFoundation\Message\Identifier\Factory\UuidMessageIdentifierFactory

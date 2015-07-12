@@ -7,10 +7,9 @@ use AppBundle\Domain\Identity\UserIdentifier;
 use AppBundle\Domain\Identity\UserRepository;
 use AppBundle\Persistence\Doctrine\EventStore\DoctrineEventStore;
 use Doctrine\DBAL\Connection;
-use RayRutjes\DomainFoundation\Contract\ConventionalContractFactory;
+use RayRutjes\DomainFoundation\Contract\Contract;
 use RayRutjes\DomainFoundation\EventBus\EventBus;
 use RayRutjes\DomainFoundation\Repository\AggregateRootRepository;
-use RayRutjes\DomainFoundation\Repository\AggregateRootRepositoryFactory;
 use RayRutjes\DomainFoundation\UnitOfWork\UnitOfWork;
 
 final class DoctrineUserRepository implements UserRepository
@@ -28,11 +27,9 @@ final class DoctrineUserRepository implements UserRepository
     {
         $eventStore = new DoctrineEventStore($connection);
 
-        $contractFactory = new ConventionalContractFactory();
-        $aggregateRootType = $contractFactory->createFromClassName(User::class);
+        $aggregateRootType = Contract::createFromClassName(User::class);
 
-        $repositoryFactory = new AggregateRootRepositoryFactory($eventStore, $eventBus);
-        $this->repository = $repositoryFactory->create($unitOfWork, $aggregateRootType);
+        $this->repository = new AggregateRootRepository($unitOfWork, $aggregateRootType, $eventStore, $eventBus);
     }
 
     /**

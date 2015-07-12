@@ -7,18 +7,12 @@ use AppBundle\Persistence\Doctrine\EventStore\Query\InsertQuery;
 use AppBundle\Persistence\Doctrine\EventStore\Query\SelectQuery;
 use Doctrine\DBAL\Connection;
 use RayRutjes\DomainFoundation\Contract\Contract;
-use RayRutjes\DomainFoundation\Contract\ContractFactory;
-use RayRutjes\DomainFoundation\Contract\ConventionalContractFactory;
 use RayRutjes\DomainFoundation\Domain\AggregateRoot\AggregateRootIdentifier;
-use RayRutjes\DomainFoundation\Domain\Event\Factory\EventFactory;
-use RayRutjes\DomainFoundation\Domain\Event\Factory\GenericEventFactory;
 use RayRutjes\DomainFoundation\Domain\Event\Serializer\CompositeEventSerializer;
 use RayRutjes\DomainFoundation\Domain\Event\Serializer\EventSerializer;
 use RayRutjes\DomainFoundation\Domain\Event\Stream\EventStream;
 use RayRutjes\DomainFoundation\EventStore\CommitIdentifier;
 use RayRutjes\DomainFoundation\EventStore\EventStore;
-use RayRutjes\DomainFoundation\Message\Identifier\Factory\MessageIdentifierFactory;
-use RayRutjes\DomainFoundation\Message\Identifier\Factory\UuidMessageIdentifierFactory;
 use RayRutjes\DomainFoundation\Persistence\Pdo\EventStore\PdoReadRecordEventStream;
 use RayRutjes\DomainFoundation\Serializer\JsonSerializer;
 
@@ -40,51 +34,21 @@ final class DoctrineEventStore implements EventStore
     private $eventSerializer;
 
     /**
-     * @var ContractFactory
-     */
-    private $contractFactory;
-
-    /**
-     * @var EventFactory
-     */
-    private $eventFactory;
-
-    /**
-     * @var MessageIdentifierFactory
-     */
-    private $messageIdentifierFactory;
-
-    /**
      * @param Connection               $connection
      * @param string                   $tableName
      * @param EventSerializer          $eventSerializer
-     * @param ContractFactory          $contractFactory
-     * @param PdoEventStoreQuery       $insertQuery
-     * @param PdoEventStoreQuery       $selectQuery
-     * @param PdoEventStoreQuery       $createQuery
-     * @param EventFactory             $eventFactory
-     * @param MessageIdentifierFactory $messageIdentifierFactory
      */
     public function __construct(
         Connection $connection,
         $tableName = 'events',
-        EventSerializer $eventSerializer = null,
-        ContractFactory $contractFactory = null,
-        PdoEventStoreQuery $insertQuery = null,
-        PdoEventStoreQuery $selectQuery = null,
-        PdoEventStoreQuery $createQuery = null,
-        EventFactory $eventFactory = null,
-        MessageIdentifierFactory $messageIdentifierFactory = null
+        EventSerializer $eventSerializer = null
     ) {
         $this->connection               = $connection;
         $this->tableName                = $tableName;
         $this->eventSerializer          = null === $eventSerializer ? new CompositeEventSerializer(new JsonSerializer()) : $eventSerializer;
-        $this->contractFactory          = null === $contractFactory ? new ConventionalContractFactory() : $contractFactory;
-        $this->insertQuery              = null === $insertQuery ? new InsertQuery($connection, $tableName) : $insertQuery;
-        $this->selectQuery              = null === $selectQuery ? new SelectQuery($connection, $tableName) : $selectQuery;
-        $this->createQuery              = null === $createQuery ? new CreateQuery($connection, $tableName) : $createQuery;
-        $this->eventFactory             = null === $eventFactory ? new GenericEventFactory() : $eventFactory;
-        $this->messageIdentifierFactory = null === $messageIdentifierFactory ? new UuidMessageIdentifierFactory() : $messageIdentifierFactory;
+        $this->insertQuery              = new InsertQuery($connection, $tableName);
+        $this->selectQuery              = new SelectQuery($connection, $tableName);
+        $this->createQuery              = new CreateQuery($connection, $tableName);
     }
 
     /**
@@ -140,10 +104,7 @@ final class DoctrineEventStore implements EventStore
         return new PdoReadRecordEventStream(
             $aggregateRootIdentifier,
             $records,
-            $this->eventSerializer,
-            $this->contractFactory,
-            $this->eventFactory,
-            $this->messageIdentifierFactory
+            $this->eventSerializer
         );
     }
 

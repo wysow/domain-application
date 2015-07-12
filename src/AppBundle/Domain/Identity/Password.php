@@ -2,9 +2,7 @@
 
 namespace AppBundle\Domain\Identity;
 
-use RayRutjes\DomainFoundation\ValueObject\ValueObject;
-
-final class Password implements ValueObject
+final class Password
 {
     /**
      * @var string
@@ -26,7 +24,7 @@ final class Password implements ValueObject
      *
      * @return bool
      */
-    public function sameValueAs(ValueObject $other)
+    public function sameValueAs(Password $other)
     {
         if (!$other instanceof self) {
             return false;
